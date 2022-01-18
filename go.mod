@@ -1,4 +1,4 @@
-module github.com/Kaginari/terraform-provider-mongodb
+module github.com/krtk6160/terraform-provider-mongodb
 
 go 1.15
 
