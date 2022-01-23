@@ -2,9 +2,10 @@ package mongodb
 
 import (
 	"context"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"time"
 )
 
 func Provider() *schema.Provider {
@@ -82,11 +83,8 @@ func Provider() *schema.Provider {
 			"mongodb_db_user": resourceDatabaseUser(),
 			"mongodb_db_role": resourceDatabaseRole(),
 		},
-		DataSourcesMap: map[string]*schema.Resource{
-
-		},
+		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,
-
 	}
 }
 
@@ -94,27 +92,27 @@ type MongoDatabaseConfiguration struct {
 	Config          *ClientConfig
 	MaxConnLifetime time.Duration
 }
+
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	clientConfig := ClientConfig{
-		Host:     d.Get("host").(string),
-		Port:     d.Get("port").(string),
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
-		DB:       d.Get("auth_database").(string),
-		Ssl:      d.Get("ssl").(bool),
-		ReplicaSet:      d.Get("replica_set").(string),
-		Certificate:       d.Get("certificate").(string),
+		Host:               d.Get("host").(string),
+		Port:               d.Get("port").(string),
+		Username:           d.Get("username").(string),
+		Password:           d.Get("password").(string),
+		DB:                 d.Get("auth_database").(string),
+		Ssl:                d.Get("ssl").(bool),
+		ReplicaSet:         d.Get("replica_set").(string),
+		Certificate:        d.Get("certificate").(string),
 		InsecureSkipVerify: d.Get("insecure_skip_verify").(bool),
-		Direct:  d.Get("direct").(bool),
-		RetryWrites: d.Get("retrywrites").(bool),
+		Direct:             d.Get("direct").(bool),
+		RetryWrites:        d.Get("retrywrites").(bool),
 	}
 
-  	return &MongoDatabaseConfiguration{
-	  Config:          &clientConfig,
-	  MaxConnLifetime: 10,
-  	} , diags
+	return &MongoDatabaseConfiguration{
+		Config:          &clientConfig,
+		MaxConnLifetime: 10,
+	}, diags
 
 }
-
