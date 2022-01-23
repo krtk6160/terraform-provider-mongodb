@@ -105,32 +105,7 @@ func resourceDatabaseViewParseId(id string) (string, string, error) {
 
 func resourceDatabaseViewUpdate(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
 	resourceDatabaseViewDelete(ctx, data, i)
-	var config = i.(*MongoDatabaseConfiguration)
-
-	client, connectionError := MongoClientInit(config)
-	if connectionError != nil {
-		return diag.Errorf("Error connecting to database : %s ", connectionError)
-	}
-	var view = data.Get("name").(string)
-	var database = data.Get("database").(string)
-	var viewOn = data.Get("view_on").(string)
-	var pipeline = data.Get("pipeline").(string)
-	var stateId = data.State().ID
-	_, errEncoding := base64.StdEncoding.DecodeString(stateId)
-	if errEncoding != nil {
-		return diag.Errorf("ID mismatch %s", errEncoding)
-	}
-
-	err := createView(client, view, viewOn, pipeline, database)
-
-	if err != nil {
-		return diag.Errorf("Could not create the role  :  %s ", err)
-	}
-	str := database + "." + view
-	encoded := base64.StdEncoding.EncodeToString([]byte(str))
-	data.SetId(encoded)
-
-	return resourceDatabaseViewRead(ctx, data, i)
+	return resourceDatabaseViewCreate(ctx, data, i)
 }
 
 func resourceDatabaseViewRead(ctx context.Context, data *schema.ResourceData, i interface{}) diag.Diagnostics {
