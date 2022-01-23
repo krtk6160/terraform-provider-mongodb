@@ -82,6 +82,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"mongodb_db_user": resourceDatabaseUser(),
 			"mongodb_db_role": resourceDatabaseRole(),
+			"mongodb_db_view": resourceDatabaseView(),
 		},
 		DataSourcesMap:       map[string]*schema.Resource{},
 		ConfigureContextFunc: providerConfigure,

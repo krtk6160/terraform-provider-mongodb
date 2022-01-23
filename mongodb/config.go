@@ -252,21 +252,56 @@ func createRole(client *mongo.Client, role string, roles []Role, privilege []Pri
 	return nil
 }
 
-func MongoClientInit(conf *MongoDatabaseConfiguration)( *mongo.Client , error) {
+func createView(client *mongo.Client, view string, viewOn string, pipeline string, database string) error {
+
+	var projection mongo.Pipeline
+
+	err := bson.UnmarshalExtJSON([]byte(pipeline), false, &projection)
+
+	if err != nil {
+		return err
+	}
+
+	err = client.Database(database).CreateView(context.TODO(), view, viewOn, projection)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func getView(client *mongo.Client, name string, database string) (mongo.SingleResult, error) {
+
+	result := client.Database(database).RunCommand(context.Background(), bson.D{
+		{Key: "listCollections", Value: 1},
+		{Key: "filter", Value: bson.D{{Key: "name", Value: name}}},
+	})
+
+	var decodedResult mongo.SingleResult
+
+	err := result.Decode(&decodedResult)
+	fmt.Println("Path: ", err)
+	if err != nil {
+		return decodedResult, err
+	}
+	return decodedResult, nil
+}
+
+func MongoClientInit(conf *MongoDatabaseConfiguration) (*mongo.Client, error) {
 
 	client, err := conf.Config.MongoClient()
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(),conf.MaxConnLifetime*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), conf.MaxConnLifetime*time.Second)
 	defer cancel()
 	err = client.Connect(ctx)
 	if err != nil {
 		return nil, err
 	}
-	err = client.Ping(ctx,nil)
+	err = client.Ping(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	return client , nil
+	return client, nil
 }

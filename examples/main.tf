@@ -83,6 +83,19 @@ resource "mongodb_db_user" "user" {
     role = "readWrite"
     db =   "monta"
   }
+}
 
+resource "mongodb_db_view" "testview" {
+  database = "admin"
+  name = "view"
+  view_on = "collection"
 
+  pipeline = jsonencode(
+    [
+      { "$project": {
+        "field1": 1,
+        "field2": 1
+        }}
+    ]
+  )
 }
