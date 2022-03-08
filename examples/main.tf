@@ -9,93 +9,83 @@ terraform {
   }
 }
 
+locals {
+  mongodb_database = "galoy"
+
+  mongodb_views = [
+    {
+      "name" : "view1"
+      "view_on" : "coll1"
+      "pipeline" : [{
+        "$project" : {
+          "field1" : 1,
+          "field2" : 1,
+        }
+      }]
+    },
+    {
+      "name" : "view2"
+      "view_on" : "coll2"
+      "pipeline" : [{
+        "$project" : {
+          "field1" : 1,
+          "field2" : 1,
+        }
+      }]
+    },
+    {
+      "name" : "view3"
+      "view_on" : "coll2"
+      "pipeline" : [{
+        "$project" : {
+          "field1" : 1,
+          "field2" : 1,
+        }
+      }]
+    }
+  ]
+}
+
 provider "mongodb" {
   host = "127.0.0.1"
   port = "27017"
   username = "root"
-  password = "root"
+  password = "password"
   ssl = false
   auth_database = "admin"
 }
 
-variable "username" {
-  description = "the user name"
-  default = "monta"
-}
-variable "password" {
-  description = "the user password"
-  default = "monta"
-}
+resource "mongodb_db_role" "read_views" {
+  name     = "data_read_views"
+  database = local.mongodb_database
 
-resource "mongodb_db_role" "role" {
-  name = "custom_role_test"
-  privilege {
-    db = "admin"
-    collection = "*"
-    actions = ["collStats"]
+  dynamic "privilege" {
+    for_each = local.mongodb_views
+    content {
+      db         = local.mongodb_database
+      collection = privilege.value.name
+      actions    = ["find"]
+    }
   }
-  privilege {
-    db = "ds"
-    collection = "*"
-    actions = ["collStats"]
-  }
-
-
-}
-
-resource "mongodb_db_role" "role_2" {
-  depends_on = [mongodb_db_role.role]
-  database = "admin"
-  name = "new_role3"
-  inherited_role {
-    role = mongodb_db_role.role.name
-    db =   "admin"
-  }
-  privilege {
-    db = "not_inhireted"
-    collection = "*"
-    actions = ["collStats"]
-  }
-}
-resource "mongodb_db_role" "role4" {
-  depends_on = [mongodb_db_role.role]
-  database = "exemple"
-  name = "new_role4"
 }
 
 resource "mongodb_db_user" "user" {
-  auth_database = "exemple"
-  name = "monta"
-  password = "monta"
+  depends_on = [mongodb_db_role.read_views]
+
+  auth_database = local.mongodb_database
+  name          = "user"
+  password      = "pass"
   role {
-    role = mongodb_db_role.role.name
-    db =   "admin"
-  }
-  role {
-    role = "readAnyDatabase"
-    db =   "admin"
-  }
-  role {
-    role = "readWrite"
-    db =   "local"
-  }
-  role {
-    role = "readWrite"
-    db =   "monta"
+    role = mongodb_db_role.read_views.name
+    db   = local.mongodb_database
   }
 }
 
-resource "mongodb_db_view" "testview" {
-  database = "admin"
-  name = "view"
-  view_on = "collection"
+resource "mongodb_db_view" "view" {
+  for_each = { for view in local.mongodb_views : view.name => view }
 
-  pipeline = jsonencode(
-    [
-      { "$project": {
-        "field1": 1,
-        "field2": 1
-        }}
-    ]
-  )
+  name     = each.value.name
+  database = local.mongodb_database
+  view_on  = each.value.view_on
+  pipeline = jsonencode(each.value.pipeline)
 }
