@@ -25,12 +25,12 @@ TERRAFORM_PLUGINS_DIRECTORY=~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NA
 install:
 	mkdir -p ${TERRAFORM_PLUGINS_DIRECTORY}
 	go build -o ${TERRAFORM_PLUGINS_DIRECTORY}/terraform-provider-${NAME}
-	cd examples && rm -rf .terraform
+	cd examples && rm -rf .terraform*
 	cd examples && make init
 re-install:
-	rm -f ${TERRAFORM_PLUGINS_DIRECTORY}/terraform-provider-${NAME}
+	rm -rf ${TERRAFORM_PLUGINS_DIRECTORY}/terraform-provider-${NAME}
 	go build -o ${TERRAFORM_PLUGINS_DIRECTORY}/terraform-provider-${NAME}
-	cd examples && rm -rf .terraform
+	cd examples && rm -rf .terraform*
 	cd examples && make init
 lint:
 	 golangci-lint run
